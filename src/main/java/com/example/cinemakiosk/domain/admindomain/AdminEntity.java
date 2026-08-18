@@ -40,7 +40,7 @@ public class AdminEntity{
     @Column(name = "level", nullable = false)
     private boolean level;        // 권한 레벨 (false: 마스터 0, true: 직원(알바) 1)
 
-    @Column(name = "refresh_token")
+    @Column(name = "refresh_token", length = 36, columnDefinition = "CHAR(36)")
     private String refreshToken;          // 자동 로그인 토큰
 
     @CreatedDate

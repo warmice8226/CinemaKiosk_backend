@@ -1,0 +1,7 @@
+FROM mariadb:11.4
+
+COPY src/main/resources/db/init.sql \
+     /docker-entrypoint-initdb.d/01-init.sql
+
+COPY src/main/resources/db/data.sql \
+     /docker-entrypoint-initdb.d/02-data.sql

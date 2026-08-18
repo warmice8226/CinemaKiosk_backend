@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS `admin` # FK (X)
     `name`        VARCHAR(50)        NOT NULL COMMENT '관리자 이름',
     `admin_phone` VARCHAR(20) UNIQUE NOT NULL COMMENT '전화번호',
     `level`       boolean            NOT NULL COMMENT '관리자 권한 레벨 : 마스터 : 0, 알바 : 1',
-    `refreshToken`        CHAR(36)           NULL COMMENT '자동 로그인 토큰',
+    `refresh_token`        CHAR(36)           NULL COMMENT '자동 로그인 토큰',
     `create_at`   DATETIME           NOT NULL COMMENT '계정 생성 일자'
 ) COMMENT '관리자';
 
@@ -65,7 +65,8 @@ CREATE TABLE IF NOT EXISTS `movie` # FK (X)
     `description` TEXT                           NULL COMMENT '줄거리',
     `start_at`    DATE                           NOT NULL COMMENT '상영 시작일',
     `end_at`      DATE                           NULL COMMENT '상영 종료일',
-    `create_at`   DATE                           NULL COMMENT '영화 등록일'
+    `create_at`   DATE                           NULL COMMENT '영화 등록일',
+    `poster_path` VARCHAR(255)                   NULL COMMENT '포스터경로'
 ) COMMENT '영화';
 
 
@@ -86,7 +87,8 @@ CREATE TABLE admin_role
 (
     id        BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '권한 인덱스',
     role_name VARCHAR(40) UNIQUE NOT NULL COMMENT 'ROLE_REFUND, ROLE_MOVIE_REG 등 시큐리티 권한 이름',
-    role_desc VARCHAR(30) UNIQUE COMMENT '권한 이름'
+    role_desc VARCHAR(30) UNIQUE COMMENT '권한 이름',
+    group_name VARCHAR(30) NULL COMMENT '프론트 사이드바 섹션 그룹명'
 ) COMMENT '권한 종류 (12개 고정 데이터)';
 
 
@@ -163,7 +165,7 @@ CREATE TABLE IF NOT EXISTS `reservation_details`
 CREATE TABLE IF NOT EXISTS `reservation_seat`
 (
     `id`             BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '고유번호',
-    `reservation_id` varchar(36) NOT NULL COMMENT '예매 내역 FK',
+    `reservation_id` CHAR(36) NOT NULL COMMENT '예매 내역 FK',
     `seat_number`    VARCHAR(10) NOT NULL COMMENT '좌석 번호',
     CONSTRAINT `fk_reservation_seat_reservation_id` FOREIGN KEY (`reservation_id`) REFERENCES reservation_details (`id`)
 ) COMMENT '예매 좌석';
@@ -172,7 +174,7 @@ CREATE TABLE IF NOT EXISTS `reservation_seat`
 CREATE TABLE IF NOT EXISTS `payment_details`
 (
     `id`              CHAR(36) PRIMARY KEY COMMENT '결제 고유번호',
-    `reservation_id`  varchar(36)                  NOT NULL COMMENT '예매 내역 FK',
+    `reservation_id`  CHAR(36)                  NOT NULL COMMENT '예매 내역 FK',
     `bonus_policy_id` BIGINT UNSIGNED              NULL COMMENT '적립 정책 FK',
     `coupon_num`      VARCHAR(12)                  NULL COMMENT '할인 쿠폰 FK',
     `cost`            BIGINT UNSIGNED              NOT NULL COMMENT '결제 금액',

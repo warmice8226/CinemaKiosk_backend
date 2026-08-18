@@ -1,0 +1,91 @@
+services:
+  kiosk-mariadb:
+    build:
+      context: ..
+      dockerfile: Dockerfile.mariadb
+    container_name: kiosk-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: cinema_kiosk
+      MARIADB_USER: task_master
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    volumes:
+      - kiosk_mariadb_data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mariadb-admin ping -h localhost -uroot -p$$MARIADB_ROOT_PASSWORD"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kiosk-internal
+
+  kiosk-postgres:
+    image: pgvector/pgvector:pg16
+    container_name: kiosk-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rag
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - kiosk_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d rag"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - kiosk-internal
+
+  kiosk-backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: kiosk-backend
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mariadb://kiosk-mariadb:3306/cinema_kiosk
+      SPRING_DATASOURCE_USERNAME: task_master
+      SPRING_DATASOURCE_PASSWORD: ${MARIADB_PASSWORD}
+
+      APP_DATASOURCE_URL: jdbc:postgresql://kiosk-postgres:5432/rag?currentSchema=public
+      APP_DATASOURCE_USERNAME: postgres
+      APP_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - kiosk_uploads:/app/uploads
+    depends_on:
+      kiosk-mariadb:
+        condition: service_healthy
+      kiosk-postgres:
+        condition: service_healthy
+    networks:
+      - kiosk-internal
+      - proxy
+
+  kiosk-view:
+    build:
+      context: ../../view
+      dockerfile: Dockerfile
+    container_name: kiosk-view
+    restart: unless-stopped
+    networks:
+      - proxy
+
+networks:
+  kiosk-internal:
+    name: kiosk-internal
+    internal: true
+  proxy:
+    external: true
+
+volumes:
+  kiosk_mariadb_data:
+  kiosk_postgres_data:
+  kiosk_uploads:

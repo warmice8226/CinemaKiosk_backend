@@ -24,7 +24,7 @@ import java.util.List;
 })
 public class ReservationDetailsEntity{
     @Id
-    @Column(length = 36)
+    @Column(length = 36, columnDefinition = "CHAR(36)")
     private String id;                     // 예매 고유번호
 
     @ManyToOne(fetch = FetchType.LAZY)

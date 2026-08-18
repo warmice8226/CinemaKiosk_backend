@@ -22,7 +22,7 @@ public class ReservationSeatEntity {
     private Long id;               //인덱스
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reservation_id", nullable = false, foreignKey = @ForeignKey(name = "fk_reservation_seat_reservation_id"))
+    @JoinColumn(name = "reservation_id", nullable = false, columnDefinition = "CHAR(36)", foreignKey = @ForeignKey(name = "fk_reservation_seat_reservation_id"))
     private ReservationDetailsEntity reservationDetailsEntity;  //예매 내역 아이디
 
     @Column(length = 10, nullable = false)

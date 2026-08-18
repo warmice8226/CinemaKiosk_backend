@@ -27,7 +27,7 @@ public class PointHistoryEntity{
     private PaymentDetailsEntity paymentDetailsEntity; // 결제 고유번호 FK
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "phone", nullable = false, foreignKey =
+    @JoinColumn(name = "phone", nullable = false, columnDefinition = "CHAR(36)", foreignKey =
     @ForeignKey(name = "fk_point_history_phone",
             foreignKeyDefinition = "FOREIGN KEY (`phone`) REFERENCES member (`phone`) ON UPDATE CASCADE"))
     private MemberEntity memberEntity; // 회원번호 FK

@@ -18,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @Table(name = "member")
 public class MemberEntity{
-    @Column(length = 35)
+    @Column(length = 20)
     @Id private String phone; // 회원 번호
 
     @Enumerated(EnumType.STRING)
