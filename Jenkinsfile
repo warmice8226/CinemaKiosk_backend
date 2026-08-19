@@ -5,6 +5,9 @@ pipeline {
         timestamps()
         disableConcurrentBuilds()
         skipDefaultCheckout(true)
+
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '20'))
     }
 
     triggers {
@@ -162,6 +165,45 @@ pipeline {
     }
 
     post {
+        failure {
+            script {
+                sh(
+                    returnStatus: true,
+                    script: '''
+                        echo "배포 실패 진단을 시작합니다."
+
+                        docker ps -a \
+                            --filter name=kiosk- \
+                            --format 'table {{.Names}}\\t{{.Status}}'
+
+                        if [ -f .env ] &&
+                           [ -f backend/deploy/compose.yml ]
+                        then
+                            docker compose \
+                                --project-name deploy \
+                                --env-file .env \
+                                -f backend/deploy/compose.yml \
+                                ps
+
+                            docker compose \
+                                --project-name deploy \
+                                --env-file .env \
+                                -f backend/deploy/compose.yml \
+                                logs \
+                                --no-color \
+                                --tail=200 \
+                                kiosk-backend \
+                                kiosk-mariadb \
+                                kiosk-postgres \
+                                kiosk-view
+                        else
+                            echo "Compose 파일 또는 .env가 없어 상세 로그를 생략합니다."
+                        fi
+                    '''
+                )
+            }
+        }
+
         always {
             sh '''
                 rm -f .env
