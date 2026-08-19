@@ -162,6 +162,51 @@ pipeline {
                 '''
             }
         }
+
+        stage('Verify external HTTPS') {
+            steps {
+                sh '''
+                    set -eu
+
+                    echo "외부 HTTPS 접속을 확인합니다."
+
+                    curl \
+                        --fail \
+                        --silent \
+                        --show-error \
+                        --location \
+                        --retry 10 \
+                        --retry-delay 3 \
+                        --retry-all-errors \
+                        --output /dev/null \
+                        https://kiosk.hyeyum.it.kr/
+
+                    curl \
+                        --fail \
+                        --silent \
+                        --show-error \
+                        --location \
+                        --retry 5 \
+                        --retry-delay 2 \
+                        --retry-all-errors \
+                        --output /dev/null \
+                        https://kiosk.hyeyum.it.kr/admin/login
+
+                    curl \
+                        --fail \
+                        --silent \
+                        --show-error \
+                        --location \
+                        --retry 5 \
+                        --retry-delay 2 \
+                        --retry-all-errors \
+                        --output /dev/null \
+                        https://kiosk.hyeyum.it.kr/swagger-ui/index.html
+
+                    echo "외부 HTTPS 응답 확인 완료"
+                '''
+            }
+        }
     }
 
     post {
