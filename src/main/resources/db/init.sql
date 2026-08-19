@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS `admin` # FK (X)
     `name`        VARCHAR(50)        NOT NULL COMMENT '관리자 이름',
     `admin_phone` VARCHAR(20) UNIQUE NOT NULL COMMENT '전화번호',
     `level`       boolean            NOT NULL COMMENT '관리자 권한 레벨 : 마스터 : 0, 알바 : 1',
-    `refresh_token`        CHAR(36)           NULL COMMENT '자동 로그인 토큰',
+    `refresh_token`        VARCHAR(512)           NULL COMMENT '자동 로그인 토큰',
     `create_at`   DATETIME           NOT NULL COMMENT '계정 생성 일자'
 ) COMMENT '관리자';
 
