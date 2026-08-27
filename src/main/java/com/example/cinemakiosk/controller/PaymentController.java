@@ -52,7 +52,10 @@ public class PaymentController {
         String amountStr = requestData.path("amount").asText("0");
         long amount = Long.parseLong(amountStr);
 
-        long scheduleId = requestData.path("scheduleId").asLong(0);
+        JsonNode scheduleIdNode = requestData.path("scheduleId");
+        long scheduleId = scheduleIdNode.isNumber()
+                ? scheduleIdNode.asLong(0)
+                : scheduleIdNode.path("scheduleId").asLong(0);
         JsonNode seats = requestData.path("seats");
         if (orderId.isBlank() || scheduleId <= 0 || !seats.isArray() || seats.isEmpty() || amount < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "필수 결제 정보가 누락되었거나 올바르지 않습니다.");

@@ -98,7 +98,10 @@ public class PaymentDetailsServiceImpl implements PaymentDetailsService {
         boolean isGuest = phone == null || phone.isEmpty();
 
         long usePoint = requestData.path("usePoint").asLong(0);
-        long scheduleIdValue = requestData.path("scheduleId").asLong(0);
+        JsonNode scheduleIdNode = requestData.path("scheduleId");
+        long scheduleIdValue = scheduleIdNode.isNumber()
+                ? scheduleIdNode.asLong(0)
+                : scheduleIdNode.path("scheduleId").asLong(0);
         if (orderId.isBlank() || paymentKey.isBlank() || scheduleIdValue <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "필수 결제 정보가 누락되었습니다.");
         }
