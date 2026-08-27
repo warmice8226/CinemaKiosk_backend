@@ -61,7 +61,18 @@ pipeline {
                 sh '''
                     set -eu
 
+                    required_keys="MARIADB_ROOT_PASSWORD MARIADB_PASSWORD POSTGRES_PASSWORD OPENAI_API_KEY SMS_KEY SECRET_KEY PHONE TMDB_API_KEY JWT_KEY TOSS_SECRET_KEY TOSS_WIDGET_SECRET_KEY"
+                    for key in $required_keys
+                    do
+                        if ! grep -q "^${key}=." .env
+                        then
+                            echo "필수 환경변수 누락: ${key}"
+                            exit 1
+                        fi
+                    done
+
                     docker compose \
+                        --project-name deploy \
                         --env-file .env \
                         -f backend/deploy/compose.yml \
                         config --quiet
@@ -71,7 +82,7 @@ pipeline {
             }
         }
         
-                stage('Build and deploy') {
+        stage('Build and deploy') {
             steps {
                 sh '''
                     set -eu

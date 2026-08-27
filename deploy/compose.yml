@@ -50,8 +50,6 @@ services:
       dockerfile: Dockerfile
     container_name: kiosk-backend
     restart: unless-stopped
-    env_file:
-      - ../.env
     environment:
       TZ: Asia/Seoul
       SPRING_DATASOURCE_URL: jdbc:mariadb://kiosk-mariadb:3306/cinema_kiosk
@@ -62,6 +60,14 @@ services:
       APP_DATASOURCE_USERNAME: postgres
       APP_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       APP_DEMO_DATA_ENABLED: ${APP_DEMO_DATA_ENABLED:-true}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      SMS_KEY: ${SMS_KEY}
+      SECRET_KEY: ${SECRET_KEY}
+      PHONE: ${PHONE}
+      TMDB_API_KEY: ${TMDB_API_KEY}
+      JWT_KEY: ${JWT_KEY}
+      TOSS_SECRET_KEY: ${TOSS_SECRET_KEY}
+      TOSS_WIDGET_SECRET_KEY: ${TOSS_WIDGET_SECRET_KEY}
     volumes:
       - kiosk_uploads:/app/uploads
     depends_on:

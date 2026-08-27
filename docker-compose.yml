@@ -6,10 +6,10 @@ services:
     mem_limit: 256m
     environment:
       TZ: Asia/Seoul
-      MARIADB_ROOT_PASSWORD: 4444
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: cinema_kiosk
       MARIADB_USER: task_master
-      MARIADB_PASSWORD: 4444
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
       MARIADB_CHARACTER_SET_SERVER: utf8mb4
       MARIADB_COLLATION_SERVER: utf8mb4_unicode_ci
     ports:
@@ -31,7 +31,7 @@ services:
       TZ: Asia/Seoul
       POSTGRES_DB: rag
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -53,10 +53,10 @@ services:
       TZ: Asia/Seoul
       SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/cinema_kiosk
       SPRING_DATASOURCE_USERNAME: task_master
-      SPRING_DATASOURCE_PASSWORD: 4444
+      SPRING_DATASOURCE_PASSWORD: ${MARIADB_PASSWORD}
       APP_DATASOURCE_URL: jdbc:postgresql://pgvector:5432/rag?currentSchema=public
       APP_DATASOURCE_USERNAME: postgres
-      APP_DATASOURCE_PASSWORD: postgres
+      APP_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       SMS_KEY: ${SMS_KEY}
       SECRET_KEY: ${SECRET_KEY}
