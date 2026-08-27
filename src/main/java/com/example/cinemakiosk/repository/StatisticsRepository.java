@@ -63,6 +63,9 @@ public class StatisticsRepository {
 
     // 통계 데이터 저장
     public boolean insertStatistics(StatisticsVO statisticsVO) {
+        jdbcTemplate.update("DELETE FROM statistics WHERE schedule_id = ? AND date = ?",
+                statisticsVO.getScheduleId(), statisticsVO.getDate());
+
         String sql = """
                 INSERT INTO statistics (schedule_id, day, revenue, customer_count, date)
                 VALUES (?, ?, ?, ?, ?)

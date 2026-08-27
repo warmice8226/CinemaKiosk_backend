@@ -15,6 +15,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -30,6 +31,11 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class PaymentDetailsServiceImpl implements PaymentDetailsService {
+
+    private static final String SIMULATED_PAYMENT_KEY = "simulated";
+
+    @Value("${toss.widget-secret-key}")
+    private String tossWidgetSecretKey;
 
     private final PaymentDetailsMapper paymentDetailsMapper;
     private final PaymentDetailsRepository paymentDetailsRepository;
@@ -193,6 +199,18 @@ public class PaymentDetailsServiceImpl implements PaymentDetailsService {
     @Transactional
     @Override
     public void saveAdminReservation(AdminReservationRequest request) {
+        saveInternalReservation(request, "admin");
+    }
+
+
+
+    @Transactional
+    @Override
+    public void saveSimulatedReservation(AdminReservationRequest request) {
+        saveInternalReservation(request, SIMULATED_PAYMENT_KEY);
+    }
+
+    private void saveInternalReservation(AdminReservationRequest request, String paymentKey) {
         String orderId = java.util.UUID.randomUUID().toString();
 
         ScheduleDTO schedule = scheduleService.getScheduleDTO(request.getScheduleId());
@@ -228,24 +246,24 @@ public class PaymentDetailsServiceImpl implements PaymentDetailsService {
                 .createAt(LocalDateTime.now())
                 .usePoint(0L)
                 .status(Status.PAY)
-                .paymentKey("admin")
+                .paymentKey(paymentKey)
                 .build();
 
         create(payment);
 
-        log.info("관리자 예매 완료: 주문번호 {}", orderId);
+        log.info("내부 예매 완료: 주문번호 {}, 결제유형 {}", orderId, paymentKey);
     }
 
     /**
      * 토스 API 승인 요청 메서드
      */
     public JsonNode confirmTossPayment(String orderId, long amount, String paymentKey) {
-        String widgetSecretKey = "test_sk_Ba5PzR0ArnOZp4xwZ16N8vmYnNeD";
+
         String url = "https://api.tosspayments.com/v1/payments/confirm";
 
         // 1. 헤더 설정 (Basic Auth 및 Content-Type)
         HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(widgetSecretKey, ""); // 콜론(:) 처리를 자동으로 해줍니다.
+        headers.setBasicAuth(tossWidgetSecretKey, ""); // 콜론(:) 처리를 자동으로 해줍니다.
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         // 2. 바디 데이터 생성 (Map 또는 DTO 사용 가능)

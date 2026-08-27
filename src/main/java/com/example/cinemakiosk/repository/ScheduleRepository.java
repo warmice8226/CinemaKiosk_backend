@@ -15,4 +15,10 @@ public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Long> 
 
     // 스케줄 오늘 포함 이후 날짜 전체 조회
     List<ScheduleEntity> findAllByEndAtAfter(LocalDateTime now);
+
+    List<ScheduleEntity> findAllByStartAtBetweenAndActivationTrueOrderByStartAt(
+            LocalDateTime startAt, LocalDateTime endAt);
+
+    boolean existsByTheaterEntity_NoAndStartAtLessThanAndEndAtGreaterThan(
+            Long theaterNo, LocalDateTime endAt, LocalDateTime startAt);
 }

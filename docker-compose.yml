@@ -60,6 +60,9 @@ services:
       PHONE: ${PHONE}
       TMDB_API_KEY: ${TMDB_API_KEY}
       JWT_KEY: ${JWT_KEY}
+      TOSS_SECRET_KEY: ${TOSS_SECRET_KEY}
+      TOSS_WIDGET_SECRET_KEY: ${TOSS_WIDGET_SECRET_KEY}
+      APP_DEMO_DATA_ENABLED: ${APP_DEMO_DATA_ENABLED:-false}
       JAVA_OPTS: "-Xms128m -Xmx256m"
     volumes:
       - uploads_data:/app/uploads

@@ -26,6 +26,8 @@ public interface PaymentDetailsService {
     //토스 결제 확인 로직
     JsonNode confirmTossPayment(String orderId, long amount, String paymentKey) throws Exception;
 
+    void saveSimulatedReservation(AdminReservationRequest request);
+
     //관리자 직접 예매
     void saveAdminReservation(AdminReservationRequest request);
 }

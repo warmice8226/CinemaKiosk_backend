@@ -2,6 +2,7 @@ package com.example.cinemakiosk.controller;
 
 import com.example.cinemakiosk.dto.*;
 import com.example.cinemakiosk.dto.requestDTO.AdminReservationRequest;
+import com.example.cinemakiosk.domain.enums.Status;
 import com.example.cinemakiosk.service.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,6 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.*;
 import java.util.*;
@@ -23,6 +26,9 @@ import java.util.*;
 @RequiredArgsConstructor
 @RequestMapping(value = "/api")
 public class PaymentController {
+
+    @Value("${toss.secret-key}")
+    private String tossSecretKey;
 
     private final ObjectMapper objectMapper; // 스프링이 자동으로 주입해주는 JSON 변환기
     private final PaymentDetailsService paymentDetailsService; //결제 내역 등록을 위해서 작성.
@@ -37,7 +43,6 @@ public class PaymentController {
     @PostMapping(value = "/payment/confirm")
     public ResponseEntity<JsonNode> confirmPayment(@RequestBody String jsonBody) throws Exception {
         log.info("결제 컨펌 로직 시작");
-        log.info("jsonBody : {}", jsonBody);
 
 
         // 1. 파싱 (Jackson 사용)
@@ -60,6 +65,9 @@ public class PaymentController {
             responseResult = paymentDetailsService.confirmTossPayment(orderId, amount, paymentKey);
 
             // 토스 응답이 200이 아니면 실패 처리 (예외 던지거나 에러 리턴)
+            if (responseResult == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "토스 결제 승인 응답이 없습니다.");
+            }
             if (responseResult.has("code") && !responseResult.has("status")) {
                 return ResponseEntity.status(400).body(responseResult);
             }
@@ -99,16 +107,22 @@ public class PaymentController {
     public ResponseEntity<Void> refund(@RequestBody String jsonBody) throws JsonProcessingException {
         //1. payment값이 필요함
         //2. 결제 내역 정보가 필요함
-        log.info("jsonBody : {}", jsonBody);
 
 
         log.error("경계");
         // 1. 파싱 (Jackson 사용)
         JsonNode requestData = objectMapper.readTree(jsonBody);
-        String paymentKey = requestData.get("paymentKey").asText();
-        String paymentId = requestData.get("paymentId").asText();
+        String paymentId = requestData.path("paymentId").asText();
+        if (paymentId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "paymentId가 필요합니다.");
+        }
+        PaymentDetailsDTO payment = paymentDetailsService.read(paymentId);
+        if (payment.getStatus() == Status.RETURN) {
+            return ResponseEntity.ok().build();
+        }
+        String paymentKey = payment.getPaymentKey();
 
-        if (paymentKey == null || paymentKey.isBlank() || paymentKey.equals("point") || paymentKey.equals("admin")) {
+        if (paymentKey == null || paymentKey.isBlank() || paymentKey.equals("point") || paymentKey.equals("admin") || paymentKey.equals("simulated")) {
             log.info("환불할 금액 0원 이거나 관리자 예매(현장 결제를 가정함) 이므로 토스 호출 하지않음: {}", paymentId);
             refundService.refund(paymentId);
             return ResponseEntity.ok().build();
@@ -125,11 +139,12 @@ public class PaymentController {
         HttpHeaders headers = new HttpHeaders();
         // Authorization: Basic {Base64 인코딩된 시크릿키}
 
-        String secretKey = "test_sk_Ba5PzR0ArnOZp4xwZ16N8vmYnNeD";// 1. 테스트 시크릿 키
+        String secretKey = tossSecretKey;// 1. 테스트 시크릿 키
         String encodedKey = Base64.getEncoder().encodeToString((secretKey + ":").getBytes()); // 2. 키 뒤에 콜론(:)을 더하고 Base64로 변환
 
         headers.set("Authorization", "Basic " + encodedKey);
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Idempotency-Key", "refund-" + paymentId);
 
         // 3. 바디(데이터) 설정
         Map<String, String> map = new HashMap<>();
@@ -150,7 +165,8 @@ public class PaymentController {
 
             }
         } catch (Exception e) {
-            System.err.println("취소 실패: " + e.getMessage());
+            log.error("토스 결제 취소 실패: paymentId={}", paymentId, e);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "토스 결제 취소에 실패했습니다.", e);
         }
 
         return ResponseEntity.ok().build();

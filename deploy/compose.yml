@@ -58,6 +58,7 @@ services:
       APP_DATASOURCE_URL: jdbc:postgresql://kiosk-postgres:5432/rag?currentSchema=public
       APP_DATASOURCE_USERNAME: postgres
       APP_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_DEMO_DATA_ENABLED: ${APP_DEMO_DATA_ENABLED:-true}
     volumes:
       - kiosk_uploads:/app/uploads
     depends_on:
