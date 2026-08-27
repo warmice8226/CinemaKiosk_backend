@@ -52,6 +52,12 @@ public class PaymentController {
         String amountStr = requestData.path("amount").asText("0");
         long amount = Long.parseLong(amountStr);
 
+        long scheduleId = requestData.path("scheduleId").asLong(0);
+        JsonNode seats = requestData.path("seats");
+        if (orderId.isBlank() || scheduleId <= 0 || !seats.isArray() || seats.isEmpty() || amount < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "필수 결제 정보가 누락되었거나 올바르지 않습니다.");
+        }
+
         String PAY_TYPE_CARD = "CARD";
 
         JsonNode responseResult = null;
@@ -61,7 +67,10 @@ public class PaymentController {
         if (PAY_TYPE_CARD.equalsIgnoreCase(payType) && amount > 0) { // 할인후 금액이 0보다 클경우만 (전액 포인트할인이 적용될 경우를 생각함)
             log.error("경계2");
             // 1. 토스 결제 승인 로직
-            String paymentKey = requestData.get("paymentKey").asText();
+            String paymentKey = requestData.path("paymentKey").asText("");
+            if (paymentKey.isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "paymentKey가 필요합니다.");
+            }
             responseResult = paymentDetailsService.confirmTossPayment(orderId, amount, paymentKey);
 
             // 토스 응답이 200이 아니면 실패 처리 (예외 던지거나 에러 리턴)

@@ -19,10 +19,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -90,13 +92,16 @@ public class PaymentDetailsServiceImpl implements PaymentDetailsService {
     @Transactional
     public void savePaymentInfo(JsonNode requestData, long amount) {
         log.info("데이터 저장 로직 시작.");
-        String orderId = requestData.get("orderId").asText();
-        String paymentKey = requestData.get("paymentKey").asText();
-        String phone = requestData.get("phone").asText(null); // 없으면 비회원 null 반환
+        String orderId = requestData.path("orderId").asText("");
+        String paymentKey = requestData.path("paymentKey").asText("");
+        String phone = requestData.path("phone").asText(null); // 없으면 비회원 null 반환
         boolean isGuest = phone == null || phone.isEmpty();
 
-        long usePoint = requestData.get("usePoint").asLong();
-        Long scheduleIdValue = requestData.path("scheduleId").path("scheduleId").asLong();
+        long usePoint = requestData.path("usePoint").asLong(0);
+        long scheduleIdValue = requestData.path("scheduleId").asLong(0);
+        if (orderId.isBlank() || paymentKey.isBlank() || scheduleIdValue <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "필수 결제 정보가 누락되었습니다.");
+        }
         log.error("경계1");
         // 좌석 정보 파싱
         List<ReservationSeatDTO> seats = new ArrayList<>();
@@ -106,6 +111,9 @@ public class PaymentDetailsServiceImpl implements PaymentDetailsService {
             for (JsonNode seat : seatsNode) {
                 seats.add(ReservationSeatDTO.builder().seatNumber(seat.asText()).build());
             }
+        }
+        if (seats.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "선택된 좌석이 없습니다.");
         }
         log.error("경계2 {}", seats);
         ScheduleDTO schedule = scheduleService.getScheduleDTO(scheduleIdValue);
