@@ -6,6 +6,7 @@ services:
     container_name: kiosk-mariadb
     restart: unless-stopped
     environment:
+      TZ: Asia/Seoul
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: cinema_kiosk
       MARIADB_USER: task_master
@@ -29,6 +30,7 @@ services:
     container_name: kiosk-postgres
     restart: unless-stopped
     environment:
+      TZ: Asia/Seoul
       POSTGRES_DB: rag
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -49,8 +51,9 @@ services:
     container_name: kiosk-backend
     restart: unless-stopped
     env_file:
-      - ../../.env
+      - ../.env
     environment:
+      TZ: Asia/Seoul
       SPRING_DATASOURCE_URL: jdbc:mariadb://kiosk-mariadb:3306/cinema_kiosk
       SPRING_DATASOURCE_USERNAME: task_master
       SPRING_DATASOURCE_PASSWORD: ${MARIADB_PASSWORD}
